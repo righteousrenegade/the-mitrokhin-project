@@ -1,231 +1,318 @@
-# Mitrokhin Pattern Detection & Asset Index Roadmap
+# Mitrokhin Pattern Detection, Asset & Propaganda Index Roadmap
 
 ## Project Vision
 
-Build an AI system that can analyze arbitrary documents, biographies, news events, or reports and assign an **"Asset Index"** score—a quantitative assessment of how closely the text matches KGB/Russian intelligence TTPs (Techniques, Tactics, and Procedures) documented in the Mitrokhin Archive.
+Build an AI system that can analyze arbitrary documents, biographies, news events, or reports and assign:
+
+1. An **"Asset Index"** score — a quantitative assessment of how closely the text matches KGB/Russian intelligence TTPs (Techniques, Tactics, and Procedures) related to recruitment, cultivation, and control as documented in the Mitrokhin Archive.
+2. A **"Propaganda Index"** score — a quantitative assessment of how closely the content matches known Russian propaganda patterns and active-measure narratives, grounded where possible in Mitrokhin active measures material and later Russian information operations.
+
+No graph/network analysis, no link analysis, and no social graph inference. The focus is purely on **what the text says and how it says it**:
+- Does this text look like something produced by or about a recruitable/useful asset (Asset Index)?
+- Does this text look like Russian propaganda or closely aligned narratives (Propaganda Index)?
 
 **End-user experience:**
-- Paste text into an AI interface
-- Receive a composite risk/asset score (0–5 scale)
-- Get a detailed breakdown of which TTPs were detected
-- Understand why the score was assigned (explainability)
+- Paste a biography, document, article, or news event into an AI interface
+- Receive:
+  - Asset Index scores on several dimensions (recruitment susceptibility, compromise potential, etc.)
+  - Propaganda Index scores on several dimensions (narrative alignment, active-measures signature, etc.)
+  - A breakdown of which TTPs / narrative patterns were detected
+  - A short justification describing why the scores were assigned
 
 **Example output:**
 ```
 INPUT: Biography of a Western academic with funding from Russian donors
+
 OUTPUT:
+
+ASSET INDEX
   Recruitment Susceptibility: 4/5
   Compromise Potential: 2/5
   Financial Leverage: 4/5
   Ideological Alignment: 3/5
   Access/Influence: 3/5
-  
+
   Contributing TTPs Detected:
     - FUNDING_COVERT (4 mentions, high confidence)
     - CULTIVATION_INTELLECTUAL (3 mentions, medium confidence)
     - USEFUL_IDIOT_UNWITTING (2 mentions, low confidence)
-  
-  Justification:
-    Text reveals substantial unexplained funding from Russian sources, sustained 
-    intellectual engagement with Kremlin-aligned institutions, and potential 
+
+  Justification (Asset Index):
+    Text reveals substantial unexplained funding from Russian sources, sustained
+    intellectual engagement with Kremlin-aligned institutions, and potential
     unwitting amplification of Russian narratives through academic publications.
+
+PROPAGANDA INDEX
+  Narrative Alignment with Russian State Messaging: 3/5
+  Active-Measures / Disinformation Signature: 2/5
+  Useful-Idiot Pattern: 4/5
+
+  Contributing Propaganda Patterns Detected:
+    - WESTERN_HYPOCRISY_FRAMING (2 mentions, medium confidence)
+    - BOTH_SIDES_FALSE_EQUIVALENCY (2 mentions, medium confidence)
+    - GEOPOLITICAL_NEUTRALITY_FRAMING (1 mention, low confidence)
+
+  Justification (Propaganda Index):
+    Content consistently frames Western institutions as morally equivalent to or
+    worse than Russian actions, uses false equivalencies, and provides intellectual
+    cover for Russian policy positions without explicit coordination signals.
 ```
 
 ---
 
 ## Phase 1: Foundation & Dataset Preparation
 
-### 1.1 Define the TTP Ontology
+### 1.1 Define the TTP & Narrative Ontology
 
-**Objective:** Create a canonical list of KGB/Russian intelligence TTPs grounded in Mitrokhin Archive analysis.
+**Objective:** Create two canonical ontologies:
+- A **Recruitment / Asset TTP ontology** grounded in Mitrokhin
+- A **Propaganda / Narrative-pattern ontology** grounded in Mitrokhin active measures + modern Russian information operations
 
 **Deliverables:**
-- [ ] **TTP Taxonomy Document** (`docs/ttp_taxonomy.md`)
-  - Structured list of 20–40 distinct TTP categories
+
+- [ ] **Asset TTP Taxonomy Document** (`docs/ttp_taxonomy_asset.md`)
+  - Structured list of ~20–40 distinct TTP categories focused on:
+    - Recruitment approaches
+    - Cultivation methods
+    - Control mechanisms
+    - Asset handling and tasking patterns
   - Each entry includes:
-    - Label (e.g., `RECRUITMENT_IDEOLOGICAL`)
-    - Definition (1–2 sentences)
-    - Historical references from Mitrokhin/KGB literature
-    - Real-world examples from the archive
-    - Related tactics (parent/child relationships)
+    - Label (e.g., `RECRUITMENT_IDEOLOGICAL`, `RECRUITMENT_KOMPROMAT`, `CULTIVATION_INTELLECTUAL`)
+    - Definition (1–3 sentences)
+    - Historical references from Mitrokhin / KGB literature
+    - Example excerpts from Mitrokhin-derived texts
 
 - [ ] **Asset Index Dimensions Document** (`docs/asset_index_dimensions.md`)
   - Define 5–8 scoring dimensions, e.g.:
-    - `RECRUITMENT_SUSCEPTIBILITY` (0–5): How likely is this person/entity to be recruited?
-    - `COMPROMISE_POTENTIAL` (0–5): Blackmail, scandal, or leverage exploitable?
-    - `EXISTING_ACCESS` (0–5): Does the person/entity have valuable information or influence?
-    - `FINANCIAL_LEVERAGE` (0–5): Can money be used?
-    - `IDEOLOGICAL_ALIGNMENT` (0–5): Alignment with Russian state interests?
-    - `OPERATIONAL_UTILITY` (0–5): How useful would they be as an asset?
-    - `CONTROL_RELIABILITY` (0–5): How controllable/stable is the relationship?
+    - `RECRUITMENT_SUSCEPTIBILITY` (0–5)
+    - `COMPROMISE_POTENTIAL` (0–5)
+    - `EXISTING_ACCESS` (0–5)
+    - `FINANCIAL_LEVERAGE` (0–5)
+    - `IDEOLOGICAL_ALIGNMENT` (0–5)
+    - `OPERATIONAL_UTILITY` (0–5)
+    - `CONTROL_RELIABILITY` (0–5)
   - For each dimension, document:
     - What it measures
-    - How it relates to TTPs
-    - Scoring rubric (what 0, 2, 5 mean)
+    - Which TTPs most strongly contribute to it
+    - Scoring rubric (what 0, 2, 5 mean; include examples)
 
-**Input:** Mitrokhin Archive books/documents, KGB lexicon, active measures literature
+- [ ] **Propaganda Pattern Taxonomy Document** (`docs/propaganda_taxonomy.md`)
+  - Structured list of ~20–40 narrative and rhetorical patterns, e.g.:
+    - `ENCIRCLEMENT_NARRATIVE` ("Russia is surrounded by hostile NATO powers")
+    - `NATO_EXPANSION_EXISTENTIAL_THREAT`
+    - `WESTERN_HYPOCRISY_FRAMING`
+    - `BOTH_SIDES_FALSE_EQUIVALENCY`
+    - `WHATABOUTISM`
+    - `UKRAINE_CORRUPTION_NARRATIVE`
+    - `SANCTIONS_COUNTER_NARRATIVE`
+    - `US_DECLINE_DEGENERACY`
+  - Each entry includes:
+    - Label
+    - Definition
+    - Key phrases / structures to look for (heuristic patterns)
+    - Example excerpts from known Russian propaganda or Mitrokhin active-measures descriptions
+
+- [ ] **Propaganda Index Dimensions Document** (`docs/propaganda_index_dimensions.md`)
+  - Define 3–5 scoring dimensions, e.g.:
+    - `RUSSIAN_NARRATIVE_ALIGNMENT` (0–5): closeness to documented Kremlin narratives
+    - `ACTIVE_MEASURES_SIGNATURE` (0–5): structural similarity to disinformation tradecraft
+    - `USEFUL_IDIOT_PATTERN` (0–5): how much the text unknowingly advances Russian interests
+  - For each dimension, document:
+    - What it measures
+    - Which propaganda patterns drive it
+    - Scoring rubric (with examples)
+
+**Input:** Mitrokhin Archive, KGB lexicon, active measures literature, documented Russian propaganda case studies
 
 ---
 
 ### 1.2 Gather and Digitize Source Material
 
-**Objective:** Build a clean, processable corpus of Mitrokhin-derived text.
+**Objective:** Build two clean corpora:
+- Asset / recruitment / TTP corpus
+- Propaganda / information-operations corpus
 
 **Deliverables:**
-- [ ] **Source Material Repository** (`data/raw/`)
-  - Digitized excerpts from *The Sword and the Shield* (Mitrokhin/Andrew)
-  - Excerpts from *The World Was Going Our Way* (related operations)
+
+- [ ] **Asset / TTP Corpus** (`data/raw/asset_ttp/`)
+  - Digitized excerpts from *The Sword and the Shield* and *The World Was Going Our Way*
   - Public Cambridge Archive transcripts (where available)
-  - Academic papers analyzing Mitrokhin revelations
-  - Documents on KGB active measures and recruitment
+  - Academic papers summarizing KGB recruitment & tradecraft
+  - Output format: JSONL with fields: `id`, `text`, `source`, `type="asset_ttp"`, `metadata`
+
+- [ ] **Propaganda Corpus** (`data/raw/propaganda/`)
+  - Mitrokhin references to active measures
+  - Public examples of Russian propaganda (RT, Sputnik, IRA posts, documented campaigns)
+  - Academic / NGO analyses of Russian narratives
+  - Output format: JSONL with `id`, `text`, `source`, `type="propaganda"`, `metadata`
 
 - [ ] **Preprocessing Pipeline** (`scripts/preprocess.py`)
-  - Text normalization
-  - Section/paragraph extraction
-  - Metadata tagging (source, date, operation type)
-  - Output: clean JSONL format with `id`, `text`, `source`, `metadata`
+  - Text normalization (whitespace, case if needed)
+  - Section/paragraph/sentence extraction
+  - Basic cleaning
+  - Attaches metadata (date, publication, etc.)
 
 **Acceptance criteria:**
-  - Minimum 500 sentences/passages from Mitrokhin materials
-  - Each passage cleanly attributed
-  - No corrupted/garbled text
+  - At least 500–1000 sentences/passages in the asset corpus
+  - At least 500–1000 sentences/passages in the propaganda corpus
+  - All items have clear source metadata
 
 ---
 
 ### 1.3 Bootstrap Initial Labels with AI-Assisted Annotation
 
-**Objective:** Rapidly generate candidate TTP labels for corpus material using an LLM, then refine via human review.
+**Objective:** Use an LLM to pre-label asset TTPs and propaganda patterns, then correct/curate manually.
 
 **Deliverables:**
-- [ ] **Annotation Prompt Template** (`prompts/ttp_labeling_prompt.md`)
-  - Few-shot prompt that describes each TTP category
-  - Examples of sentences and their TTP labels
-  - Instructions to output JSON: `{"text": "...", "labels": [...]}`
-  - Clear instruction to *only use labels from the ontology*
+
+- [ ] **Two Annotation Prompt Templates**
+  - `prompts/asset_ttp_labeling_prompt.md`
+    - Explains the asset TTP ontology
+    - Provides 5–10 example sentences with correct labels
+    - Instructs model to output JSON: `{"text": "...", "asset_ttp_labels": ["..."]}`
+  - `prompts/propaganda_labeling_prompt.md`
+    - Explains propaganda pattern ontology
+    - Provides examples
+    - JSON: `{"text": "...", "propaganda_labels": ["..."]}`
 
 - [ ] **AI-Assisted Labeling Script** (`scripts/ai_label_bootstrap.py`)
-  - Reads raw corpus from `data/raw/`
-  - Batches sentences
-  - Calls LLM API (OpenAI, Claude, local model) with annotation prompt
-  - Captures predicted labels + confidence
-  - Outputs to `data/labeled_candidates/`
+  - Reads from `data/raw/asset_ttp/` and `data/raw/propaganda/`
+  - Calls LLM with appropriate prompt
+  - Writes candidate labels to `data/labeled_candidates/asset_ttp/` and `.../propaganda/`
 
-- [ ] **Human Review Interface** (spreadsheet or Label Studio setup)
-  - Simple CSV or Label Studio project with:
-    - Pre-filled AI predictions
-    - Toggle to accept/reject/correct each label
-    - Comments field
-  - Output: `data/labeled_reviewed/` (high-confidence labels only)
+- [ ] **Human Review Workflow**
+  - You (and any collaborator) review AI labels
+  - Use CSV/Label Studio for quick correction
+  - Save final labels to `data/labeled_reviewed/asset_ttp/` and `.../propaganda/`
 
-- [ ] **Labeling Guidelines Document** (`docs/labeling_guidelines.md`)
-  - When to use each TTP label
-  - Common ambiguous cases and how to resolve
-  - Quality standards (inter-annotator agreement target: 80%+)
+- [ ] **Labeling Guidelines**
+  - `docs/labeling_guidelines_asset.md`
+  - `docs/labeling_guidelines_propaganda.md`
 
 **Acceptance criteria:**
-  - 300–500 sentences with reviewed TTP labels
-  - Each label traceable to 1+ TTP categories
-  - Consistent application of rules across dataset
+  - 300–500 manually reviewed, high-confidence labeled sentences for asset TTPs
+  - 300–500 manually reviewed, high-confidence labeled sentences for propaganda patterns
 
 ---
 
-## Phase 2: Build the TTP Classifier
+## Phase 2: Build Two Sentence-Level Classifiers
 
 ### 2.1 Prepare Training Data
 
-**Objective:** Convert reviewed labels into a machine-learning-ready format.
+**Objective:** Turn reviewed labels into training/validation/test splits.
 
 **Deliverables:**
-- [ ] **Training Dataset Splits** (`data/train/`, `data/val/`, `data/test/`)
-  - Format: JSONL with fields:
+
+- [ ] **Asset TTP Dataset Splits** (`data/asset_ttp_train/`, `data/asset_ttp_val/`, `data/asset_ttp_test/`)
+  - JSONL format:
     ```json
     {
-      "id": "sent_001",
+      "id": "asset_sent_001",
       "text": "The agent was cultivated through philosophical discussions over years.",
       "labels": ["CULTIVATION_INTELLECTUAL", "LONG_TERM_APPROACH"],
       "source": "sword_and_shield_p234"
     }
     ```
-  - Train set: 60% (300 sentences)
-  - Validation set: 20% (100 sentences)
-  - Test set: 20% (100 sentences)
-  - Stratified by TTP distribution
 
-- [ ] **Dataset Documentation** (`data/README.md`)
-  - Label distribution charts
-  - Class imbalance notes (how to handle if present)
-  - Data quality flags
+- [ ] **Propaganda Dataset Splits** (`data/propaganda_train/`, `data/propaganda_val/`, `data/propaganda_test/`)
+  - JSONL format:
+    ```json
+    {
+      "id": "prop_sent_001",
+      "text": "NATO's expansion leaves Russia no choice but to defend itself.",
+      "labels": ["NATO_EXPANSION_EXISTENTIAL_THREAT", "ENCIRCLEMENT_NARRATIVE"],
+      "source": "rt_example_2016"
+    }
+    ```
 
-
----
-
-### 2.2 Train Sentence-Level TTP Classifier
-
-**Objective:** Build a fine-tuned transformer model that predicts TTPs for any input sentence.
-
-**Deliverables:**
-- [ ] **Model Training Script** (`models/train_ttp_classifier.py`)
-  - Loads JSONL data
-  - Fine-tunes a pre-trained transformer (RoBERTa, BERT, or similar)
-  - Multi-label classification task
-  - Tracks metrics: precision, recall, F1 per label + macro-F1
-  - Saves best checkpoint + hyperparameters
-
-- [ ] **Trained Model Artifacts** (`models/checkpoints/ttp_classifier_v1/`)
-  - Weights, tokenizer, config
-  - Performance metrics JSON
-  - Confusion matrix (which labels get confused?)
-
-- [ ] **Model Card** (`models/ttp_classifier_v1_card.md`)
-  - Architecture, training approach
-  - Performance on test set
-  - Known limitations
-  - Inference time / resource requirements
-  - False positive / false negative analysis
-
-- [ ] **Inference Script** (`scripts/predict_ttps.py`)
-  - Takes raw text → outputs sentence-level predictions with confidence
-  - JSON output: `{"sentences": [{"text": "...", "predicted_labels": [...], "confidence": [...]}, ...]}`
-
-**Success metrics:**
-  - Test set F1 ≥ 0.75 (per-label macro-F1)
-  - <5% error on a manual spot-check of 50 new sentences
+- [ ] **Dataset README** (`data/README.md`)
+  - Label distributions
+  - Class imbalance notes
 
 ---
 
-## Phase 3: Build the Asset Index Model
+### 2.2 Train Asset TTP Classifier
 
-### 3.1 Aggregate TTP Signals into Features
-
-**Objective:** Convert sentence-level TTP predictions into document-level signals.
+**Objective:** Fine-tune a transformer to detect Mitrokhin-style TTPs in text.
 
 **Deliverables:**
-- [ ] **Feature Aggregation Script** (`scripts/aggregate_ttps_to_features.py`)
-  - Input: predicted TTPs for all sentences in a document
-  - Outputs: feature vector with:
-    - Count of each TTP label
-    - Max confidence for each TTP label
-    - Normalized frequency (TTP count / total sentences)
-    - Co-occurrence patterns (e.g., `RECRUITMENT + KOMPROMAT` score)
-    - Semantic clustering (e.g., "recruitment tactics" frequency)
-  - Output format: JSON or pandas DataFrame
 
+- [ ] **Training Script** (`models/train_asset_ttp_classifier.py`)
+  - Multi-label classification (sigmoid output per label)
+  - Tracks precision/recall/F1 per label + macro-F1
+
+- [ ] **Checkpoint & Artifacts** (`models/checkpoints/asset_ttp_classifier_v1/`)
+  - Model weights
+  - Tokenizer
+  - Config
+  - Metrics JSON
+
+- [ ] **Inference Script** (`scripts/predict_asset_ttps.py`)
+  - Input: text
+  - Output: per-sentence TTP labels + confidence
 
 ---
 
-### 3.2 Curate Labeled Examples for Asset Index Training
+### 2.3 Train Propaganda Pattern Classifier
 
-**Objective:** Hand-label a small set of realistic documents with asset index scores.
+**Objective:** Fine-tune a second transformer to detect propaganda narratives.
 
 **Deliverables:**
-- [ ] **Annotated Asset Index Dataset** (`data/asset_index_examples/`)
-  - 30–50 documents (biographies, news articles, reports) with hand-assigned scores
-  - Each entry:
+
+- [ ] **Training Script** (`models/train_propaganda_classifier.py`)
+  - Multi-label classification
+  - Similar logging/metrics as asset model
+
+- [ ] **Checkpoint & Artifacts** (`models/checkpoints/propaganda_classifier_v1/`)
+
+- [ ] **Inference Script** (`scripts/predict_propaganda_patterns.py`)
+  - Input: text
+  - Output: per-sentence propaganda labels + confidence
+
+**Success metrics (both models):**
+  - Macro-F1 ≥ 0.75 on test set
+  - Manual spot-check on 50 unseen sentences: <5–10% egregious errors
+
+---
+
+## Phase 3: Build the Asset & Propaganda Index Models
+
+### 3.1 Aggregate Sentence-Level Signals to Document-Level Features
+
+**Objective:** Turn predictions from Phase 2 into document-level vectors.
+
+**Deliverables:**
+
+- [ ] **Asset Feature Aggregator** (`scripts/aggregate_asset_ttps_to_features.py`)
+  - For each input document/biography:
+    - Run `predict_asset_ttps.py`
+    - Compute features:
+      - Count of each TTP label
+      - Normalized frequency (per sentence)
+      - Maximum and average confidence per label
+      - Simple co-occurrence patterns (e.g., `RECRUITMENT_IDEOLOGICAL + CULTIVATION_INTELLECTUAL`)
+    - Output: feature vector in JSON/CSV
+
+- [ ] **Propaganda Feature Aggregator** (`scripts/aggregate_propaganda_to_features.py`)
+  - For each input article/document:
+    - Run `predict_propaganda_patterns.py`
+    - Compute analogous features for propaganda labels
+
+---
+
+### 3.2 Create Hand-Labeled Index Examples
+
+**Objective:** Build small but high-quality labeled sets for supervised index scoring.
+
+**Deliverables:**
+
+- [ ] **Asset Index Example Set** (`data/asset_index_examples/`)
+  - 30–50 biographies/articles
+  - Each annotated with:
     ```json
     {
       "id": "doc_001",
-      "text": "Full biography or article here...",
-      "source": "example_bio_academic.txt",
+      "text": "Full biography...",
       "asset_index": {
         "recruitment_susceptibility": 3,
         "compromise_potential": 2,
@@ -235,265 +322,207 @@ OUTPUT:
         "operational_utility": 3,
         "control_reliability": 2
       },
-      "annotations_by": "primary_researcher",
-      "reasoning": "Has valuable academic position, exposure to U.S. research, but limited ideological alignment."
+      "notes": "Has high-value access and unexplained funding but unclear ideological commitment."
     }
     ```
 
-- [ ] **Annotation Guidelines** (`docs/asset_index_annotation_guidelines.md`)
-  - When to assign each score (0, 1, 2, 3, 4, 5)
-  - Examples of documents at each level
-  - How to justify the score
-
-
----
-
-### 3.3 Train Asset Index Regressor
-
-**Objective:** Build a model that predicts asset index scores from TTP features.
-
-**Deliverables:**
-- [ ] **Asset Index Model Training Script** (`models/train_asset_index_model.py`)
-  - Input features: TTP aggregates from 3.1 + optional metadata (country, sector, etc.)
-  - Target: asset index scores (0–5 for each dimension)
-  - Model type: multi-output regression (scikit-learn, XGBoost) or multi-task neural net
-  - Handles small dataset gracefully (regularization, cross-validation)
-  - Outputs: trained model + feature importance analysis
-
-- [ ] **Trained Model Artifacts** (`models/asset_index_v1/`)
-  - Serialized model (pickle, joblib, etc.)
-  - Feature importance scores
-  - Cross-validation metrics (RMSE, MAE per dimension)
-
-- [ ] **Model Card** (`models/asset_index_v1_card.md`)
-  - Training approach, data size
-  - Performance metrics
-  - Feature importance (which TTPs drive which scores?)
-  - Known limitations (small training set, etc.)
-
-
----
-
-## Phase 4: Build the Full Pipeline & Explainability Layer
-
-### 4.1 Integrate into End-to-End Pipeline
-
-**Objective:** Create a unified inference script that takes raw text → asset index score + explanation.
-
-**Deliverables:**
-- [ ] **Unified Inference Script** (`scripts/full_pipeline.py`)
-  - Input: document text
-  - Step 1: Split into sentences
-  - Step 2: Predict TTPs for each sentence (2.2)
-  - Step 3: Aggregate TTP features (3.1)
-  - Step 4: Predict asset index scores (3.3)
-  - Output: JSON with all intermediate results + final scores
-
-- [ ] **Pipeline Wrapper Class** (`src/asset_index_pipeline.py`)
-  - Encapsulates the pipeline for easy reuse
-  - Methods: `analyze(text) → Dict[asset_scores, ttp_breakdown, explanation]`
-  - Error handling, logging
-
----
-
-### 4.2 Build Explainability Layer
-
-**Objective:** Generate human-readable justifications for asset index scores.
-
-**Deliverables:**
-- [ ] **Explanation Generator** (`src/explainer.py`)
-  - Rules-based + LLM-based approach:
-    - Identify top-contributing TTPs for each asset dimension
-    - Rank sentences by confidence + impact on score
-    - Summarize in natural language
-  - Output: structured JSON explanation
-
-  Example:
-  ```json
-  {
-    "recruitment_susceptibility": {
-      "score": 4,
-      "top_contributing_ttps": [
-        {"ttp": "CULTIVATION_INTELLECTUAL", "mentions": 3, "confidence": 0.92},
-        {"ttp": "IDEOLOGICAL_APPEAL", "mentions": 2, "confidence": 0.87}
-      ],
-      "key_sentences": [
-        "The subject regularly attends symposiums hosted by Kremlin-aligned think tanks.",
-        "Long-standing academic interest in alternative geopolitical frameworks."
-      ],
-      "summary": "Subject shows strong receptivity to intellectual cultivation and has demonstrated ideological sympathies that align with Russian state narratives. Extended engagement with Russian academic networks suggests opportunity for recruitment."
+- [ ] **Propaganda Index Example Set** (`data/propaganda_index_examples/`)
+  - 30–50 articles/posts
+  - Each annotated with, for example:
+    ```json
+    {
+      "id": "article_001",
+      "text": "Full article...",
+      "propaganda_index": {
+        "russian_narrative_alignment": 4,
+        "active_measures_signature": 3,
+        "useful_idiot_pattern": 2
+      },
+      "notes": "Strong alignment with Kremlin NATO talking points but written in mainstream Western outlet."
     }
-  }
-  ```
+    ```
 
-- [ ] **Visualization Templates** (`notebooks/visualize_results.ipynb`)
-  - Asset index radar chart
-  - TTP contribution bar chart
-  - Key sentence highlighting
-  - Example outputs for demo purposes
+- [ ] **Annotation Guidelines**
+  - `docs/asset_index_annotation_guidelines.md`
+  - `docs/propaganda_index_annotation_guidelines.md`
 
 ---
 
-### 4.3 API / Web Interface (Optional, MVP)
+### 3.3 Train Asset Index & Propaganda Index Models
 
-**Objective:** Make the system accessible via API or simple web UI.
+**Objective:** Learn mappings from feature vectors → index scores.
 
 **Deliverables:**
-- [ ] **FastAPI Server** (`src/api.py`)
-  - Endpoint: `POST /analyze`
-  - Input: `{"text": "..."}`
-  - Output: Full asset index + explanation JSON
-  - Rate limiting, logging, error handling
 
-- [ ] **Simple Web UI** (`frontend/index.html` + `frontend/app.js`)
-  - Textarea for text input
-  - Submit button
-  - Display asset index scores + breakdown
-  - Copy-to-clipboard for full output
-  - Entirely client-side (optional: call local/remote API)
+- [ ] **Asset Index Model** (`models/train_asset_index_model.py`)
+  - Multi-output regression or multi-task classification
+  - Input: features from `aggregate_asset_ttps_to_features.py`
+  - Output: 5–8 asset index scores
 
-- [ ] **Docker Setup** (`Dockerfile`, `docker-compose.yml`)
-  - Containerize the API + model
-  - Easy local deployment
+- [ ] **Propaganda Index Model** (`models/train_propaganda_index_model.py`)
+  - Similar structure for propaganda scores
+
+- [ ] **Saved Models & Cards**
+  - `models/asset_index_v1/` + `models/asset_index_v1_card.md`
+  - `models/propaganda_index_v1/` + `models/propaganda_index_v1_card.md`
+
+**Target:**
+  - Correlation ≥ 0.75 with human labels on held-out examples
+  - Qualitative agreement with your own expert judgment most of the time
 
 ---
 
-## Phase 5: Refinement, Evaluation & Documentation
+## Phase 4: End-to-End Pipeline & Explainability
 
-### 5.1 Test on Real-World Data
+### 4.1 Unified Inference Pipeline
 
-**Objective:** Validate the system on held-out examples that mimic real use cases.
+**Objective:** One interface that goes from raw text → both indexes + explanations.
 
 **Deliverables:**
-- [ ] **Test Dataset** (`data/test_cases/`)
-  - 20–30 diverse documents:
-    - News articles (real & synthetic)
-    - Academic biographies
-    - Corporate profiles
-    - Social media posts
-    - Open-source intelligence reports
-  - Hand-labeled ground truth asset indices by domain experts
-  - Blind evaluation (researchers don't see model output until after scoring)
 
-- [ ] **Evaluation Report** (`docs/evaluation_report.md`)
-  - Accuracy metrics (how often does the model match expert scores?)
-  - Failure analysis (where does it go wrong?)
-  - Ablation studies (how much does each TTP category contribute?)
-  - Robustness testing (adversarial examples, paraphrasing)
+- [ ] **Pipeline Wrapper** (`src/index_pipeline.py`)
+  - Steps:
+    1. Split input into sentences
+    2. Run asset TTP classifier → collect predictions
+    3. Run propaganda classifier → collect predictions
+    4. Aggregate to features for each index
+    5. Run index models → get numeric scores
+    6. Call explainer (below) → textual justification
+  - Method: `analyze(text) → {asset_index, propaganda_index, explanations, per_sentence_labels}`
+
+- [ ] **CLI Tool** (`scripts/run_analysis.py`)
+  - Usage:
+    ```bash
+    python scripts/run_analysis.py --input-file example.txt --output-json result.json
+    ```
 
 ---
 
-### 5.2 Iterate & Improve
+### 4.2 Explainability Layer
 
-**Objective:** Use evaluation results to refine models and data.
+**Objective:** Human-readable justifications grounded in the detected patterns.
 
 **Deliverables:**
-- [ ] **Refined Labeled Dataset v2** (`data/labeled_reviewed_v2/`)
-  - If v1 has systematic errors, expand & correct
-  - Aim for 500–1000 sentences
 
-- [ ] **Updated TTP Classifier v2** (`models/checkpoints/ttp_classifier_v2/`)
-  - Retrain on expanded dataset
-  - Target test F1 ≥ 0.80
+- [ ] **Explanation Generator** (`src/explainer.py`)
+  - Inputs:
+    - Asset index scores
+    - Propaganda index scores
+    - Per-sentence TTP / propaganda predictions
+  - Outputs per index:
+    - Top contributing labels + counts + average confidence
+    - 3–10 key sentences quoted from the input
+    - Short natural-language summary (can be LLM-assisted but bound to evidence)
 
-- [ ] **Updated Asset Index Model v2** (`models/asset_index_v2/`)
-  - Retrain with revised ontology (if needed)
-  - Better feature engineering
+- [ ] **Example Notebooks** (`notebooks/`)
+  - `01_basic_demo.ipynb`: run pipeline on a biography
+  - `02_propaganda_demo.ipynb`: run pipeline on an article
 
 ---
 
-### 5.3 Documentation & Community Contribution
+### 4.3 API / Simple UI (Optional MVP)
 
-**Objective:** Make the project reproducible and shareable.
+**Objective:** Simple way to use the system interactively.
 
 **Deliverables:**
-- [ ] **Comprehensive README** (`README.md`)
-  - Project overview, use cases, ethical considerations
-  - Quick start guide
-  - Architecture diagram
-  - Installation & usage examples
 
-- [ ] **Architecture Document** (`docs/architecture.md`)
-  - System components
-  - Data flow diagram
-  - Model descriptions
-  - Scalability notes
+- [ ] **FastAPI Service** (`src/api.py`)
+  - `POST /analyze` → returns full JSON output
 
-- [ ] **Contributing Guide** (`CONTRIBUTING.md`)
-  - How to improve the TTP ontology
-  - How to add new test cases
-  - How to retrain models
-
+- [ ] **Minimal Web UI** (`frontend/index.html`, `frontend/app.js`)
+  - Text box for input
+  - Shows asset and propaganda scores side-by-side
+  - Shows key sentences and labels
 
 ---
 
-## Phase 6: Advanced Features (Optional, Post-MVP)
+## Phase 5: Evaluation, Iteration, Documentation
 
-### 6.1 Interactive Explanation UI
-- Highlight sentences contributing to each score
-- Show confidence levels
+### 5.1 Real-World Evaluation
 
-### 6.2 Comparative Analysis
-- Compare multiple documents side-by-side
-- Identify networks or patterns across multiple entities
+- Build a small evaluation set of real biographies and articles
+- Have you + collaborator score them blind
+- Compare human scores vs. model scores
+- Document where the system fails (false positives/negatives)
 
-### 6.3 Temporal Analysis
-- Track asset index changes over time
-- Detect shifts in TTPs or risk profile
+### 5.2 Iterate
 
-### 6.4 Continuous Learning
-- Feedback loop: user corrections → model retraining
-- Active learning: flag low-confidence predictions for review
+- Expand labeled datasets where performance is weakest
+- Refine ontologies (merge or split labels as needed)
+- Retrain classifiers and index models
 
----
+### 5.3 Documentation
 
-## Milestones
-
-| Phase | Milestone | Duration |
-|-------|-----------|----------|
-| **1.1** | TTP Ontology defined |
-| **1.2** | Source material gathered & cleaned |
-| **1.3** | Bootstrap labels + manual review |
-| **2.1** | Training data ready |
-| **2.2** | TTP classifier trained & validated |
-| **3.1–3.2** | Asset index features + training data |
-| **3.3** | Asset index model trained |
-| **4.1–4.2** | Full pipeline + explainability |
-| **5.1–5.2** | Testing, evaluation, iteration |
-| **5.3** | Documentation complete | 2–3 weeks |
-
+- Update `README.md` with:
+  - Clear statement: **no network, link, or social graph analysis** — content-only
+  - Example usage
+  - Limitations and ethical constraints
 
 ---
 
-## Success Criteria
+## Repository Structure (Content-Only Version)
 
-- [ ] TTP classifier achieves ≥0.80 F1 on held-out test set
-- [ ] Asset index model predictions agree with expert annotations ≥75% of the time
-- [ ] System can process a typical biography (500–1000 words) in <5 seconds
-- [ ] Explainability output is readable and actionable for non-ML users
-- [ ] Codebase is documented, reproducible, and open-source ready
-- [ ] At least 1 external reviewer validates use case and methodology
-
----
-
-## Risk & Mitigation
-
-| Risk | Impact | Mitigation |
-|------|--------|-----------|
-| Small training dataset → overfitting | Model fails on new data | Use transfer learning, regularization, data augmentation |
-| TTP ontology poorly defined → noisy labels | Garbage in, garbage out | Iterate on ontology based on early results; achieve high inter-annotator agreement |
-| Adversarial/synthetic text fools model | False positives create liability | Test robustness; document limitations; add human review step |
-| Scope creep (too many TTPs, asset dims) | Project becomes unmanageable | Ruthlessly prioritize; start with 20–30 TTPs and 5–7 asset dims |
-| Ethical misuse (over-confident scoring) | Reputational/legal liability | License clearly, add disclaimers, require human judgment in loop |
-
----
-
-## Next Steps
-
-1. **This week:** Read Mitrokhin source material, sketch TTP taxonomy (Phase 1.1)
-2. **Next week:** Create TTP taxonomy document + asset index dimensions (Phase 1.1 complete)
-3. **Week 3:** Begin source material digitization (Phase 1.2)
-4. **Week 4:** Set up annotation infrastructure + AI labeling prompt (Phase 1.3)
-5. **Ongoing:** Iterate, refine, and expand as you learn more
-
-
+```
+mitrokhin-asset-index/
+├── README.md
+├── docs/
+│   ├── ttp_taxonomy_asset.md
+│   ├── propaganda_taxonomy.md
+│   ├── asset_index_dimensions.md
+│   ├── propaganda_index_dimensions.md
+│   ├── labeling_guidelines_asset.md
+│   ├── labeling_guidelines_propaganda.md
+│   ├── asset_index_annotation_guidelines.md
+│   ├── propaganda_index_annotation_guidelines.md
+│   └── evaluation_report.md
+├── data/
+│   ├── raw/
+│   │   ├── asset_ttp/
+│   │   └── propaganda/
+│   ├── labeled_candidates/
+│   │   ├── asset_ttp/
+│   │   └── propaganda/
+│   ├── labeled_reviewed/
+│   │   ├── asset_ttp/
+│   │   └── propaganda/
+│   ├── asset_ttp_train/ asset_ttp_val/ asset_ttp_test/
+│   ├── propaganda_train/ propaganda_val/ propaganda_test/
+│   ├── asset_index_examples/
+│   └── propaganda_index_examples/
+├── models/
+│   ├── train_asset_ttp_classifier.py
+│   ├── train_propaganda_classifier.py
+│   ├── train_asset_index_model.py
+│   ├── train_propaganda_index_model.py
+│   └── checkpoints/
+│       ├── asset_ttp_classifier_v1/
+│       ├── propaganda_classifier_v1/
+│       ├── asset_index_v1/
+│       └── propaganda_index_v1/
+├── src/
+│   ├── __init__.py
+│   ├── index_pipeline.py
+│   ├── explainer.py
+│   └── api.py
+├── scripts/
+│   ├── preprocess.py
+│   ├── ai_label_bootstrap.py
+│   ├── predict_asset_ttps.py
+│   ├── predict_propaganda_patterns.py
+│   ├── aggregate_asset_ttps_to_features.py
+│   ├── aggregate_propaganda_to_features.py
+│   └── run_analysis.py
+├── notebooks/
+│   ├── 01_basic_demo.ipynb
+│   └── 02_propaganda_demo.ipynb
+├── frontend/
+│   ├── index.html
+│   └── app.js
+├── tests/
+│   ├── test_asset_ttp_classifier.py
+│   ├── test_propaganda_classifier.py
+│   ├── test_index_models.py
+│   └── test_pipeline.py
+├── requirements.txt
+└── setup.py
+```
