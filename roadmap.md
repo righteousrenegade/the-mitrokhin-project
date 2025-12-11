@@ -12,7 +12,6 @@ The focus is purely on **what the text says and how it says it**:
 **End-user experience:**
 - Paste a biography, document, article, or news event into an AI interface
 - Receive:
-  - Asset Index scores on several dimensions (recruitment susceptibility, compromise potential, etc.)
   - Propaganda Index scores on several dimensions (narrative alignment, active-measures signature, etc.)
   - A breakdown of which TTPs / narrative patterns were detected
   - A short justification describing why the scores were assigned
