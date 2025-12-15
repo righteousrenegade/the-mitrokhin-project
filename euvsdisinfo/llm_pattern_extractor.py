@@ -233,10 +233,15 @@ Please identify and extract:
 
 Note: Provide accurate translation even if source language detection is uncertain.
 
+CRITICAL: For the "translation" field:
+- If source is NOT English: Provide complete, accurate English translation of the entire original text
+- If source IS English: Use null
+- NEVER use placeholder text like "English translation of original text"
+
 Respond in this exact JSON format:
 ```json
 {{
-  "translation": "English translation of original text (null if already English)",
+  "translation": "[COMPLETE ENGLISH TRANSLATION HERE OR null IF ALREADY ENGLISH]",
   "primary_narrative": "NARRATIVE_NAME",
   "techniques": ["TECHNIQUE1", "TECHNIQUE2"],
   "key_phrases": ["phrase1", "phrase2", "phrase3"],
