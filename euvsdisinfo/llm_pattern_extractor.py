@@ -323,9 +323,19 @@ Respond in this exact JSON format:
                 return self._validate_and_clean_llm_response(parsed_json)
             except json.JSONDecodeError as e:
                 print(f"JSON parsing error: {e}")
-                print(f"Error at position: {e.pos if hasattr(e, 'pos') else 'unknown'}")
-                print(f"Problematic JSON (first 300 chars): {json_str[:300]}...")
-                print(f"Problematic JSON (last 300 chars): ...{json_str[-300:]}")
+                error_pos = e.pos if hasattr(e, 'pos') else 0
+                print(f"Error at position: {error_pos}")
+                
+                # Show context around the error position
+                if error_pos < len(json_str):
+                    context_start = max(0, error_pos - 50)
+                    context_end = min(len(json_str), error_pos + 50)
+                    print(f"Context around error:")
+                    print(f"'{json_str[context_start:error_pos]}[ERROR HERE]{json_str[error_pos:context_end]}'")
+                    print(f"Problematic character: '{json_str[error_pos]}' (ASCII: {ord(json_str[error_pos])})")
+                
+                print(f"First 200 chars: {json_str[:200]}")
+                print(f"Last 200 chars: {json_str[-200:]}")
                 
                 # Try to fix common JSON issues
                 try:
@@ -336,6 +346,19 @@ Respond in this exact JSON format:
                     return self._validate_and_clean_llm_response(parsed_json)
                 except Exception as repair_error:
                     print(f"JSON repair failed: {repair_error}")
+                    
+                    # If repair fails, let's try a different approach
+                    # Show the problematic line
+                    if hasattr(repair_error, 'pos'):
+                        error_pos = repair_error.pos
+                        if error_pos < len(fixed_json):
+                            lines = fixed_json[:error_pos].split('\n')
+                            error_line = len(lines)
+                            print(f"Error appears to be on line {error_line}")
+                            if error_line <= len(fixed_json.split('\n')):
+                                problem_line = fixed_json.split('\n')[error_line-1] if error_line > 0 else ""
+                                print(f"Problematic line: '{problem_line}'")
+                    
                     print(f"Raw response (first 500 chars): {content[:500]}...")
                     return None
                 
@@ -350,56 +373,139 @@ Respond in this exact JSON format:
         """Attempt to fix common JSON formatting issues."""
         import re
         
+        print("DEBUG: Starting JSON repair...")
+        original_length = len(json_str)
+        
         # Clean up basic formatting
         json_str = json_str.strip()
         
         # Remove extra quotes around the entire JSON
         if json_str.startswith('\"') and json_str.endswith('\"'):
             json_str = json_str[1:-1]
+            print("DEBUG: Removed outer quotes")
         
-        # Check if JSON is truncated (doesn't end with })
-        if not json_str.rstrip().endswith('}'):
-            print("DEBUG: JSON appears truncated, attempting to close...")
-            
-            # Find the last complete field
-            lines = json_str.split('\\n')
-            cleaned_lines = []
-            
-            for line in lines:
-                line = line.strip()
-                if line and not line.endswith((',', '{', '}')):
-                    # This might be an incomplete line
-                    if ':' in line and not line.endswith(('\"', ']')):
-                        # Try to close incomplete string or array
-                        if '\"' in line and line.count('\"') % 2 == 1:
-                            line += '\"'
-                        elif '[' in line and ']' not in line:
-                            line += ']'
-                    
-                cleaned_lines.append(line)
-            
-            json_str = '\\n'.join(cleaned_lines)
-            
-            # Ensure proper closing
-            if not json_str.rstrip().endswith('}'):
-                # Find last complete field and close properly
-                brace_count = json_str.count('{') - json_str.count('}')
-                json_str = json_str.rstrip()
-                if json_str.endswith(','):
-                    json_str = json_str[:-1]  # Remove trailing comma
-                json_str += '}' * brace_count
+        # CRITICAL FIXES for LLM JSON issues
+        print("DEBUG: Applying critical JSON fixes...")
         
-        # Fix common quote escaping issues
-        # Escape unescaped quotes in string values
-        def fix_quotes_in_strings(match):
+        # Fix 1: Handle double quotes in arrays ""text"" -> "\"text\""
+        # This is the main issue causing parse failures
+        print("DEBUG: Fixing double-quoted array items...")
+        json_str = re.sub(r'""([^"]+)""', r'"\"\1\""', json_str)
+        
+        # Fix 2: Handle unescaped literal \n -> \\n in string values
+        print("DEBUG: Fixing unescaped newlines in string values...")
+        def fix_escapes_in_strings(match):
+            prefix = match.group(1)  # "field": "
+            content = match.group(2)  # content
+            suffix = match.group(3)   # " 
+            
+            # Fix literal \n sequences that break JSON parsing
+            content = content.replace('\\n', '\\\\n')
+            content = content.replace('\\r', '\\\\r')
+            content = content.replace('\\t', '\\\\t')
+            
+            return prefix + content + suffix
+        
+        # Apply to all string field values
+        json_str = re.sub(r'("[^"]+"\s*:\s*")(.*?)("(?:\s*[,}]))', fix_escapes_in_strings, json_str, flags=re.DOTALL)
+        
+        print(f"DEBUG: Critical fixes applied. Length: {original_length} -> {len(json_str)}")
+        
+        # Try parsing now to see if we fixed the main issues
+        try:
+            test_parse = json.loads(json_str)
+            print("DEBUG: ✓ JSON parses successfully after critical fixes!")
+            return json_str
+        except json.JSONDecodeError as e:
+            print(f"DEBUG: Still has issues after critical fixes: {e}")
+            # Continue with the more complex repair logic below...
+        
+        # The main issue: LLM returns \n in strings that should be \\n for valid JSON
+        # We need to escape actual newlines and literal \n sequences in string values
+        
+        print("DEBUG: Fixing unescaped newlines in string values...")
+        
+        # Method: Find all string values and properly escape them
+        # Use a more targeted regex approach
+        
+        def fix_string_value(match):
+            """Fix a single string value by properly escaping content"""
             key = match.group(1)
             content = match.group(2)
-            # Escape quotes that aren't already escaped
-            fixed_content = re.sub(r'(?<!\\\\)"', '\\\\"', content)
-            return f'"{key}": "{fixed_content}"'
+            
+            print(f"DEBUG: Fixing string field '{key}' (length: {len(content)})")
+            
+            # The content might have:
+            # 1. Literal \n that should become \\n 
+            # 2. Actual newline characters that should become \\n
+            # 3. Unescaped quotes that should become \"
+            
+            # First handle the literal \n sequences (this is the main issue)
+            # The LLM is putting literal \n in the JSON instead of \\n
+            content = content.replace('\\n', '\\\\n')
+            content = content.replace('\\r', '\\\\r')  
+            content = content.replace('\\t', '\\\\t')
+            
+            # Handle actual newline characters (just in case)
+            content = content.replace('\n', '\\\\n')
+            content = content.replace('\r', '\\\\r')
+            content = content.replace('\t', '\\\\t')
+            
+            # Fix unescaped quotes (but not already escaped ones)
+            content = re.sub(r'(?<!\\)"', '\\\\"', content)
+            
+            return f'"{key}": "{content}"'
         
-        # Apply to key-value pairs
-        json_str = re.sub(r'"([^"]+)":\\s*"([^"]*(?:\\\\"[^"]*)*)"', fix_quotes_in_strings, json_str)
+        # Apply the fix to all string key-value pairs
+        # This pattern should match: "key": "value" where value might contain newlines
+        pattern = r'"([^"]+)":\s*"((?:[^"\\]|\\.|")*?)"(?=\s*[,}])'
+        
+        # For safety, let's also try a simpler approach first
+        # Just escape the obvious \n sequences in the translation field specifically
+        if '"translation":' in json_str:
+            print("DEBUG: Found translation field, applying targeted fix...")
+            
+            # Find the translation field and fix it specifically
+            translation_pattern = r'("translation":\s*")(.*?)("(?=\s*[,}]))'
+            
+            def fix_translation_field(match):
+                prefix = match.group(1)
+                content = match.group(2) 
+                suffix = match.group(3)
+                
+                print(f"DEBUG: Fixing translation field content (length: {len(content)})")
+                
+                # Fix the literal \n sequences that are causing JSON parsing to fail
+                fixed_content = content.replace('\\n', '\\\\n')
+                fixed_content = fixed_content.replace('\\r', '\\\\r')
+                fixed_content = fixed_content.replace('\\t', '\\\\t')
+                
+                # Handle actual newlines if any
+                fixed_content = fixed_content.replace('\n', '\\\\n') 
+                fixed_content = fixed_content.replace('\r', '\\\\r')
+                fixed_content = fixed_content.replace('\t', '\\\\t')
+                
+                # Fix quotes
+                fixed_content = re.sub(r'(?<!\\)"', '\\\\"', fixed_content)
+                
+                print(f"DEBUG: Translation field fixed. New length: {len(fixed_content)}")
+                return prefix + fixed_content + suffix
+            
+            json_str = re.sub(translation_pattern, fix_translation_field, json_str, flags=re.DOTALL)
+        
+        # Apply the general fix to all other string fields
+        print("DEBUG: Applying general string field fixes...")
+        json_str = re.sub(pattern, fix_string_value, json_str, flags=re.DOTALL)
+        
+        print(f"DEBUG: JSON repair complete. Length: {original_length} -> {len(json_str)}")
+        
+        # Show a preview of the fixed content
+        if len(json_str) > 400:
+            print(f"DEBUG: Fixed JSON preview:")
+            print(f"  Start: {json_str[:200]}")
+            print(f"  End: {json_str[-200:]}")
+        else:
+            print(f"DEBUG: Fixed JSON: {json_str}")
         
         return json_str
     
